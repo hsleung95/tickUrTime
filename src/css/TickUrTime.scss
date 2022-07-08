@@ -1,0 +1,37 @@
+.tickUrTime {
+	.nav-tabs {
+		.nav-item {
+			width:50%;
+			
+			button {
+				width: 100%;
+				text-align: center;
+			}
+		}		
+	}
+
+	.rowActivity {
+		.activities {
+			display: flex;
+
+			.btnActivity {
+				width: 20vw;
+				margin-right: 5%;
+			}
+		}
+		
+		.btnMore {
+			width: 100%;
+		}
+	}
+	
+	.rowAction {
+		.btn {
+			width: 100%;
+		}
+	}
+}
+
+#activityInput {
+		width: 100%;
+	}
