@@ -1,0 +1,26 @@
+.activityList {
+
+	.list {
+		height: 50vh;
+		overflow-x: hidden;
+		overflow-y: scroll;
+		
+		.btnActivity {
+			height: 10%;
+			width: 90%;
+			margin-top: 10px;
+			margin-left: 20px;
+			text-align: left;
+		}
+
+	}
+
+	#activityInput {
+		width: 90%;
+	}
+	
+	.btnAction {
+		width: 80%;
+		margin-left: 5px;
+	}
+}
