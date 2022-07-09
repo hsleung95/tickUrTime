@@ -1,5 +1,8 @@
-.row-btn button {
-	margin-right: 5px;
+.row-btn {
+	text-align: center;
+	button {
+		margin-right: 5px;
+	}
 }
 
 .modal-dialog {
@@ -9,5 +12,15 @@
 .recordForm {
 	.class-right {
 		float: right;
+	}
+}
+
+#datepicker {
+	position: absolute;
+}
+
+@media (min-width: 500px) {
+	.row-btn {
+		text-align: left;
 	}
 }

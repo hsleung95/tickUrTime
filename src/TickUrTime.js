@@ -13,13 +13,16 @@ import axios from "axios";
 import './css/TickUrTime.scss';
 import './css/timing/Clock.scss';
 import './css/timing/Timer.scss';
+import { withAuth0 } from "@auth0/auth0-react";
 
 class TickUrTime extends React.Component {
 
 	timer;
 	commonLength;
+	config;
 
 	constructor(props) {
+
 		super(props);
 		var activities = this.getFromStorage('activities');
 		var commonlyUsed = [];
@@ -43,7 +46,7 @@ class TickUrTime extends React.Component {
 			showActivityList: false
 		};
 		
-		this.getFromDB();
+		this.getFromDB = this.getFromDB.bind(this);
 		this.toggleActivityList = this.toggleActivityList.bind(this);
 		this.addActivity = this.addActivity.bind(this);
 		this.setActivity = this.setActivity.bind(this);
@@ -58,10 +61,37 @@ class TickUrTime extends React.Component {
 			showActivityList: !this.state.showActivityList
 		});
 	}
+
+	async setToken() {
+		const {user, isAuthenticated} = this.props.auth0;
+		var localToken = localStorage.getItem("token")
+		var token = (isAuthenticated) ? user.sub : localToken;
+
+		if (token == null || token == "null") {
+			await axios.get("http://localhost:8080/token")
+				.then(res => {
+					return res.data.token;
+				})
+				.then(token => {
+					localStorage.setItem("token", token);
+					this.config = {headers: {token: token}};
+				});
+		} else {
+			var tokenPrefix = token.substring(0,5);
+			var localTokenPrefix = localToken.substring(0,5);
+			if (localTokenPrefix == "guest" && tokenPrefix != localTokenPrefix) {
+				var params = {oldToken: localToken, newToken: token};
+				axios.put("http://localhost:8080/token", params);
+			}
+			localStorage.setItem("token", token);
+			this.config = {headers: {token: token}};
+		}
+	}
 	
-	getFromDB() {
-		var records = axios.get("http://localhost:8080/");
-		console.log(records);
+	componentDidMount() {
+		this.setToken().then(res => {
+			this.getFromDB();
+		});
 	}
 	
 	getFromStorage(type) {
@@ -93,6 +123,7 @@ class TickUrTime extends React.Component {
 		this.setState({
 			activity: val
 		});
+		this.setState({records: []});
 	}
 	
 	startCounting() {
@@ -131,27 +162,57 @@ class TickUrTime extends React.Component {
 		});
 	}
 	
+	getFromDB() {
+		axios.get("http://localhost:8080/activityRecords", this.config)
+			.then(res => {
+				console.log(res.data);
+				this.setState({records: res.data});
+			}).catch(err => {
+				console.log(err);
+			});
+	}
+
 	addRecord(activityName = null, startTime = null, endTime = null, timeSpent = null) {
 		activityName = (activityName == null) ? this.state.activity.name : activityName;
 		startTime = (startTime == null) ? this.state.date : startTime;
 		endTime = (endTime == null) ? new Date() : endTime;
 		var timeSpent = (timeSpent == null) ? this.state.count : timeSpent;
 		var record = {
-			id: this.state.records.length,
+			activity: activityName,
+			startTime: startTime.toUTCString(),
+			endTime: endTime.toUTCString(),
+			timeSpent: timeSpent,
+			userId: "",
+			description: ""
+		};
+		axios.post("http://localhost:8080/activityRecords",record, this.config)
+		.then(() => {
+			this.getFromDB()
+		});
+	}
+
+	updateRecord(id, activityName, startTime, endTime, timeSpent) {
+		var record = {
 			activity: activityName,
 			startTime: startTime.toUTCString(),
 			endTime: endTime.toUTCString(),
 			timeSpent: timeSpent,
 			description: ""
 		};
-		var items = this.state.records;
-		items.push(record);
-		this.setState({
-			records: items
+		axios.put("http://localhost:8080/activityRecords/" + id,record, this.config)
+		.then(() => {
+			this.getFromDB()
 		});
-		localStorage.setItem('records',JSON.stringify(items));
 	}
 	
+	deleteRecord(id) {
+		axios.delete("http://localhost:8080/activityRecords/" + id, this.config)
+		.then(() => {
+			this.getFromDB()
+		});
+	}
+
+
 	setTimer() {
 		this.setState({'timer': (this.state.timer == 'timer') ? 'clock' : 'timer'});
 	}
@@ -200,7 +261,11 @@ class TickUrTime extends React.Component {
 					</Tab>
 					<Tab eventKey = "records" title="records">
 						<br />
-						<Records addRecord = {this.addRecord} records = {this.state.records} />
+						<Records addRecord={this.addRecord} 
+								 updateRecord={this.updateRecord} 
+								 deleteRecord={this.deleteRecord} 
+								 records = {this.state.records} 
+								 getFromDB={this.getFromDB} />
 					</Tab>
 				</Tabs>
 			</div>
@@ -208,4 +273,4 @@ class TickUrTime extends React.Component {
 	}
 }
 
-export default TickUrTime;
+export default withAuth0(TickUrTime);

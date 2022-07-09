@@ -1,3 +1,4 @@
+import React from 'react';
 
 function Timer(props) {
 	var count = props.count;
