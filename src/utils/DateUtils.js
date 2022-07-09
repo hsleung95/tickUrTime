@@ -13,13 +13,16 @@ export function formatDate(date) {
 }
 
 export function formatSeconds(seconds) {
-	var hr = parseInt(seconds/3600);
-	seconds -= (hr*3600);
-	hr = (hr > 0) ? (hr + 'hr ') : "";
-	var min = parseInt(seconds/60);
-	seconds -= (min*60);
-	min = (min > 0) ? (min + 'min ') : "";
-	return hr + min + (seconds%60) + 'sec'; 
+	var remainSeconds = seconds;
+	var hr = parseInt(remainSeconds/3600);
+	remainSeconds -= (hr*3600);
+	var hrStr = (hr > 0) ? (hr + 'hr ') : "";
+	var min = parseInt(remainSeconds/60);
+	remainSeconds -= (min*60);
+	var minStr = (min > 0) ? (min + 'min ') : "";
+	var sec = remainSeconds%60;
+	var secStr = (hr > 0) ? '' : sec + 'sec';
+	return (hrStr + minStr + secStr);
 }
 
 export function padZero(val) {

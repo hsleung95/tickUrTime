@@ -5,14 +5,22 @@ import {formatSeconds} from './../utils/DateUtils.js';
 
 function ActivityRecords(props) {
 	var records = [];
-	for (var key in props) {
+	var activityRecords = [];
+	props.records.forEach(record => {
+
+		if (!activityRecords[record.activity]) {
+			activityRecords[record.activity] = 0;
+		}
+		activityRecords[record.activity] += record.timeSpent;
+	});	
+	for (var key in activityRecords) {
 		records.push(
-				<Row className="record">
+				<Row key={key} className="record">
 					<Col xs="6" className="text-center">
 						{key}
 					</Col>
 					<Col xs="6" className="text-center">
-						{formatSeconds(props[key])}
+						{formatSeconds(activityRecords[key])}
 					</Col>
 				</Row>
 
@@ -20,7 +28,17 @@ function ActivityRecords(props) {
 	}
 	return (
 		<>
-		{records}
+			<Row className="fw-bold">
+				<Col xs="6" className="text-center">
+					Activity
+				</Col>
+				<Col xs="6" className="text-center">
+					Total Time Spent
+				</Col>
+			</Row>
+			<div className="records activityRecords">
+				{records}
+			</div>
 		</>
 	);
 }
