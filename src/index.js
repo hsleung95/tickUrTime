@@ -5,6 +5,8 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { Auth0Provider } from "@auth0/auth0-react";
 
+var config;
+
 ReactDOM.render(
 	<Auth0Provider
 		domain="dev-nrm3pnng.us.auth0.com"
@@ -15,7 +17,7 @@ ReactDOM.render(
 			<App />
 		</React.StrictMode>
 	</Auth0Provider>,
-		document.getElementById('root')
+	document.getElementById('root')
 );
 
 // If you want to start measuring performance in your app, pass a function

@@ -6,9 +6,12 @@ import Col from 'react-bootstrap/Col';
 import Modal from 'react-bootstrap/Modal';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
-import {formatDate, formatTime, formatSeconds} from './utils/DateUtils.js';
+import {formatDate, formatTime, formatSeconds, formatDateVal} from './utils/DateUtils.js';
+import Controller from './Controller.js';
 
 class RecordForm extends React.Component {
+	
+	controller;
 	
     constructor(props) {
         super(props);
@@ -17,12 +20,13 @@ class RecordForm extends React.Component {
 			endTime: null,
 			timeSpent: null
 		};
+		this.controller = new Controller();
         this.handleSubmit = this.handleSubmit.bind(this);
+		this.getRecord = props.getRecord.bind(this);
 		this.addRecord = props.addRecord.bind(this);
 		this.updateRecord = props.updateRecord.bind(this);
 		this.deleteRecord = props.deleteRecord.bind(this);
 		this.toggleForm = props.toggleForm.bind(this);
-		this.getFromDB = props.getFromDB.bind(this);
 		this.setStartTime = this.setStartTime.bind(this);
 		this.setEndTime = this.setEndTime.bind(this);
 		this.confirmDelete = this.confirmDelete.bind(this);
@@ -45,10 +49,6 @@ class RecordForm extends React.Component {
 		}
         this.toggleForm(false);
     }
-	
-	formatDateVal(date) {
-		return formatDate(date) + "T" + formatTime(date);
-	}
 	
 	setStartTime(e) {
 		var startTime =  new Date(e.target.value);
@@ -101,8 +101,8 @@ class RecordForm extends React.Component {
 	}
 
     render() {
-		var startDate = (this.props.record) ? this.formatDateVal(new Date(this.props.record.startTime)) : this.formatDateVal(new Date());
-		var endDate = (this.props.record) ?  this.formatDateVal(new Date(this.props.record.endTime)) : this.formatDateVal(new Date());
+		var startDate = (this.props.record) ? formatDateVal(new Date(this.props.record.startTime)) : formatDateVal(new Date());
+		var endDate = (this.props.record) ?  formatDateVal(new Date(this.props.record.endTime)) : formatDateVal(new Date());
 		var activity = (this.props.record) ? this.props.record.activity : '';
 		var timeSpent = (this.props.record) ? formatSeconds(this.props.record.timeSpent) : 0;
         return (
@@ -112,7 +112,7 @@ class RecordForm extends React.Component {
                     New Record
                 </Modal.Header>
                 <Modal.Body>
-                <Form id="eventForm" className="recordForm" onSubmit={this.handleSubmit}>
+                <Form id="eventForm" className="recordForm" onSubmit={this.handleSubmit} noValidate>
                     <Row>
                         <Form.Group className="mb-3" controlId="activity">
                             <Form.Label>Activity</Form.Label>

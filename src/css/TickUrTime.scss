@@ -1,13 +1,18 @@
 .tickUrTime {
+	position: relative;
+	height: 100vh;
+
 	.nav-tabs {
+		position: absolute;
+		bottom: 0;
+		width: 100%;
+
 		.nav-item {
-			width:50%;
-			
 			button {
 				width: 100%;
 				text-align: center;
 			}
-		}		
+		}
 	}
 
 	.rowActivity {
@@ -19,12 +24,12 @@
 				margin-right: 5%;
 			}
 		}
-		
+
 		.btnMore {
 			width: 100%;
 		}
 	}
-	
+
 	.rowAction {
 		.btn {
 			width: 100%;
@@ -33,5 +38,5 @@
 }
 
 #activityInput {
-		width: 100%;
-	}
+	width: 100%;
+}
