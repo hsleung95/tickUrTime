@@ -9,29 +9,29 @@ import Timer from './timing/Timer.js';
 import Records from './Records.js';
 import Actions from './Actions.js';
 import ActivityList from './ActivityList.js';
+import FormControl from 'react-bootstrap/FormControl';
+import Form from 'react-bootstrap/Form';
 import axios from "axios";
 import './css/TickUrTime.scss';
 import './css/timing/Clock.scss';
 import './css/timing/Timer.scss';
+import LoginButton from './auth/LoginButton.js';
+import LogoutButton from './auth/LogoutButton.js';
 import { withAuth0 } from "@auth0/auth0-react";
+import {formatDateVal} from './utils/DateUtils.js';
+import Controller from './Controller.js';
 
 class TickUrTime extends React.Component {
 
 	timer;
 	commonLength;
-	config;
+	controller;
 
 	constructor(props) {
-
 		super(props);
-		var activities = this.getFromStorage('activities');
+		var activities = [];
 		var commonlyUsed = [];
 		this.commonLength = 3;
-		activities.forEach(activity => {
-			if(true == activity.commonlyUsed && commonlyUsed.length < this.commonLength) {
-				commonlyUsed.push(activity);
-			}
-		});
 		
 		this.state = {
 			count: 0,
@@ -39,27 +39,46 @@ class TickUrTime extends React.Component {
 			counting: false,
 			activity: null,
 			date: new Date(),
-			records: this.getFromStorage('records'),
+			records: [],
 			activities: activities,
 			commonlyUsed: commonlyUsed,
 			timer: 'timer',
-			showActivityList: false
+			showActivityList: false,
+			estimatedTime: null,
+			notified: false
 		};
 		
-		this.getFromDB = this.getFromDB.bind(this);
+		this.controller = new Controller();
+		this.getRecord = this.getRecord.bind(this);
+
 		this.toggleActivityList = this.toggleActivityList.bind(this);
+		this.getActivities = this.getActivities.bind(this);
 		this.addActivity = this.addActivity.bind(this);
 		this.setActivity = this.setActivity.bind(this);
+
 		this.startCounting = this.startCounting.bind(this);
 		this.pauseCounting = this.pauseCounting.bind(this);
 		this.stopCounting = this.stopCounting.bind(this);
 		this.setTimer = this.setTimer.bind(this);
+		this.updateEstimatedTime = this.updateEstimatedTime.bind(this);
+		window.globalConfig = null;
+		
 	}
 	
 	toggleActivityList() {
 		this.setState({
 			showActivityList: !this.state.showActivityList
 		});
+	}
+	
+	setCommonlyUsed() {
+		var commonlyUsed = [];
+		this.state.activities.forEach((activity, i) => {
+			if(true == activity.commonlyUsed && commonlyUsed.length < this.commonLength) {
+				commonlyUsed.push(activity);
+			}
+		});
+		this.setState({commonlyUsed: commonlyUsed});
 	}
 
 	async setToken() {
@@ -68,29 +87,27 @@ class TickUrTime extends React.Component {
 		var token = (isAuthenticated) ? user.sub : localToken;
 
 		if (token == null || token == "null") {
-			await axios.get("http://localhost:8080/token")
-				.then(res => {
-					return res.data.token;
-				})
-				.then(token => {
-					localStorage.setItem("token", token);
-					this.config = {headers: {token: token}};
-				});
+			var requestToken = this.controller.getToken();
+			if (requestToken != null) {
+				localStorage.setItem("token", token);
+				window.globalConfig = {headers: {token: token}};
+			}
 		} else {
 			var tokenPrefix = token.substring(0,5);
 			var localTokenPrefix = localToken.substring(0,5);
 			if (localTokenPrefix == "guest" && tokenPrefix != localTokenPrefix) {
-				var params = {oldToken: localToken, newToken: token};
-				axios.put("http://localhost:8080/token", params);
+				this.controller.putToken(localToken, token);
 			}
 			localStorage.setItem("token", token);
-			this.config = {headers: {token: token}};
+			window.globalConfig = {headers: {token: token}};
 		}
 	}
 	
 	componentDidMount() {
+		this.askNotificationPermission();
 		this.setToken().then(res => {
-			this.getFromDB();
+			this.getRecord();
+			this.getActivities();
 		});
 	}
 	
@@ -105,25 +122,27 @@ class TickUrTime extends React.Component {
 		}		
 	}
 	
-	addActivity(activityInput) {
+	async getActivities() {
+		var activities = await this.controller.getActivities();
+		this.setState({activities: activities});
+		this.setCommonlyUsed();
+
+	}
+	
+	async addActivity(activityInput) {
 		var activity = {
 			name: activityInput,
-			commonlyUsed: (this.state.commonlyUsed.length < this.commonLength)
+			commonlyUsed: false,
+			userId: window.globalConfig.headers.token
 		};
-		var activities = this.state.activities;
-		activities.push(activity);
-		this.setState({
-			toggleInput: false,
-			activities: activities
-		});
-		localStorage.setItem('activities',JSON.stringify(activities));
+		var records = await this.controller.addActivity(activity);
+		this.getActivities();
 	}
 	
 	setActivity(val) {
 		this.setState({
 			activity: val
 		});
-		this.setState({records: []});
 	}
 	
 	startCounting() {
@@ -141,7 +160,35 @@ class TickUrTime extends React.Component {
 				counted: 0,
 				counting: true
 			});
+			if (!this.state.notified && this.state.estimatedTime != null && date.getTime() >= this.state.estimatedTime.getTime()) {
+				console.log(this.state.notified);
+				this.setState({notified: true});
+				this.notifyUser();
+			}
 		},1000);
+	}
+	
+	async askNotificationPermission() {
+		let granted = false;
+
+		if (Notification.permission === 'granted') {
+			granted = true;
+		} else if (Notification.permission !== 'denied') {
+			let permission = await Notification.requestPermission();
+			granted = permission === 'granted' ? true : false;
+		}
+	}
+	
+	notifyUser() {
+		if (Notification.permission === 'granted') {
+			const noti = new Notification('TickUrTime', {
+				body: 'your counting reached your estimated time'
+			});
+			
+			setTimeout(() => {
+				noti.close();
+			}, 10000);
+		}
 	}
 	
 	pauseCounting() {
@@ -162,17 +209,12 @@ class TickUrTime extends React.Component {
 		});
 	}
 	
-	getFromDB() {
-		axios.get("http://localhost:8080/activityRecords", this.config)
-			.then(res => {
-				console.log(res.data);
-				this.setState({records: res.data});
-			}).catch(err => {
-				console.log(err);
-			});
+	async getRecord() {
+		var records = await this.controller.getActivityRecord();
+		this.setState({records: records});
 	}
 
-	addRecord(activityName = null, startTime = null, endTime = null, timeSpent = null) {
+	async addRecord(activityName = null, startTime = null, endTime = null, timeSpent = null) {
 		activityName = (activityName == null) ? this.state.activity.name : activityName;
 		startTime = (startTime == null) ? this.state.date : startTime;
 		endTime = (endTime == null) ? new Date() : endTime;
@@ -182,34 +224,29 @@ class TickUrTime extends React.Component {
 			startTime: startTime.toUTCString(),
 			endTime: endTime.toUTCString(),
 			timeSpent: timeSpent,
-			userId: "",
+			userId: window.globalConfig.headers.token,
 			description: ""
 		};
-		axios.post("http://localhost:8080/activityRecords",record, this.config)
-		.then(() => {
-			this.getFromDB()
-		});
+		var records = await this.controller.addActivityRecord(record);
+		this.getRecord();
 	}
 
-	updateRecord(id, activityName, startTime, endTime, timeSpent) {
+	async updateRecord(id, activityName, startTime, endTime, timeSpent) {
 		var record = {
 			activity: activityName,
 			startTime: startTime.toUTCString(),
 			endTime: endTime.toUTCString(),
 			timeSpent: timeSpent,
+			userId: window.globalConfig.headers.token,
 			description: ""
 		};
-		axios.put("http://localhost:8080/activityRecords/" + id,record, this.config)
-		.then(() => {
-			this.getFromDB()
-		});
+		var records = await this.controller.updateActivityRecord(id, record);
+		this.getRecord();
 	}
 	
-	deleteRecord(id) {
-		axios.delete("http://localhost:8080/activityRecords/" + id, this.config)
-		.then(() => {
-			this.getFromDB()
-		});
+	async deleteRecord(id) {
+		var records = await this.controller.deleteActivityRecord(id);
+		this.getRecord();
 	}
 
 
@@ -217,10 +254,19 @@ class TickUrTime extends React.Component {
 		this.setState({'timer': (this.state.timer == 'timer') ? 'clock' : 'timer'});
 	}
 	
+	updateEstimatedTime(e) {
+		this.setState({
+			estimatedTime: new Date(e.target.value)
+		});
+		console.log(this.state.estimatedTime);
+	}
+	
 	render() {
+		const { isAuthenticated } = this.props.auth0;
+
 		return (
 			<div className="tickUrTime">
-				<Tabs defaultActiveKey="timing">
+				<Tabs defaultActiveKey="timing" justify>
 					<Tab eventKey = "timing" title="timing">
 						<br />
 						<div>
@@ -239,6 +285,23 @@ class TickUrTime extends React.Component {
 								</Col>
 							</Row>
 							<br />
+							{this.state.timer == 'clock' && <Clock count={this.state.count} />}
+							{this.state.timer == 'timer' && <Timer count={this.state.count} />}
+							<br />
+							<Row>
+								<Col xs="6" className="text-center">Selected Activity:</Col>
+								<Col xs="6" className="text-center">{(this.state.activity) ? this.state.activity.name : ""}</Col>
+							</Row>
+							<br />
+							<Row>
+								<Col xs="6" className="text-center">
+									Estimated Time:
+								</Col>
+								<Col xs="6">
+									<FormControl id="estimatedTime" type="datetime-local" placeholder="date" onChange={this.updateEstimatedTime} />                                                     
+								</Col>
+							</Row>
+							<br />
 							<Actions setTimer={this.setTimer}
 								startCounting={this.startCounting}
 								pauseCounting={this.pauseCounting}
@@ -248,9 +311,6 @@ class TickUrTime extends React.Component {
 								counting={this.state.counting}
 								count={this.state.count}
 							/>
-							{this.state.timer == 'clock' && <Clock count={this.state.count} />}
-							{this.state.timer == 'timer' && <Timer count={this.state.count} />}
-							<br />
 							<ActivityList showActivityList={this.state.showActivityList}
 								setActivity={this.setActivity}
 								addActivity={this.addActivity}
@@ -265,7 +325,15 @@ class TickUrTime extends React.Component {
 								 updateRecord={this.updateRecord} 
 								 deleteRecord={this.deleteRecord} 
 								 records = {this.state.records} 
-								 getFromDB={this.getFromDB} />
+								 getRecord={this.getRecord}
+								 controller={this.controller}
+						 />
+					</Tab>
+					<Tab eventKey = "userInfo" title="info">
+						<br />
+							{isAuthenticated && <LogoutButton />}
+							{!isAuthenticated && <LoginButton />}
+
 					</Tab>
 				</Tabs>
 			</div>

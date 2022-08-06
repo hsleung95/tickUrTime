@@ -6,13 +6,15 @@ import {formatSeconds} from './../utils/DateUtils.js';
 function ActivityRecords(props) {
 	var records = [];
 	var activityRecords = [];
-	props.records.forEach(record => {
+	if (props.records) {
+		props.records.forEach(record => {
 
-		if (!activityRecords[record.activity]) {
-			activityRecords[record.activity] = 0;
-		}
-		activityRecords[record.activity] += record.timeSpent;
-	});	
+			if (!activityRecords[record.activity]) {
+				activityRecords[record.activity] = 0;
+			}
+			activityRecords[record.activity] += record.timeSpent;
+		});
+	}
 	for (var key in activityRecords) {
 		records.push(
 				<Row key={key} className="record">

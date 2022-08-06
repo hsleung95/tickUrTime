@@ -6,7 +6,6 @@ import Col from 'react-bootstrap/Col';
 import './css/ActivityList.scss';
 
 function ActivityList(props) {
-	
 	return (
 		<Modal className="activityList" show={props.showActivityList}>
 			<Modal.Body>

@@ -31,3 +31,7 @@ export function padZero(val) {
 	}
 	return val;
 }
+
+export function formatDateVal(date) {
+	return formatDate(date) + "T" + formatTime(date);
+}
