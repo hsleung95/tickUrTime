@@ -1,20 +1,33 @@
 .timer {
 	text-align: center;
-	font-size: 100px;
-	height: 350px;
+	font-size: 70px;
+	width: 350px;
+	height: 117px;
 	position: relative;
-	
+	font-family: 'Cute Font', 'Orbitron', sans-serif;
+	box-shadow: 0rem 0rem 2rem 0rem rgba(0, 0, 0, .1),
+	10rem 10rem 10rem 10rem rgba(255, 255, 255, .5);
+	border-radius: 5%;
+	border: 5px;
+	left: 50%;
+	transform: translateX(-50%);
+	margin-top: 10%;
+
 	.timeStr {
 		width: 100%;
 		position: absolute;
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%,-50%);
+		
 	}
 }
+
+
 
 @media only screen and (max-width: 500px) {
 	.timer {
 		font-size: 60px;
+		
 	}
 }

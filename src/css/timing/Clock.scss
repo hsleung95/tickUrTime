@@ -7,29 +7,38 @@
 	border: 5px;
 	left: 50%;
 	transform: translateX(-50%);
+	margin-top: 10%;
+
+	box-shadow: 0rem 0rem 2rem 0rem rgba(0, 0, 0, .1),
+	10rem 10rem 10rem 10rem rgba(255, 255, 255, .5);
+
+	font-family: 'Cute Font', 'Orbitron', sans-serif;
+	font-size: 50px;
+
+
 
 	.number {
 		position: absolute;
 	}
-
+	// 1 font width 2.5% height 5% (?)
 	.twelve {
-		left: 48%;
+		left: 45%;
 		top: 0;
 	}
 
 	.three {
-		left: 97.5%;
-		top: 45%;
+		left: 90%;
+		top: 40%;
 	}
 
 	.six {
-		left: 49.5%;
+		left: 47.5%;
 		bottom: 0;
 	}
 
 	.nine {
 		left: 5%;
-		top: 45%;
+		top: 40%;
 	}
 
 	.hr,.min,.sec {
@@ -37,7 +46,7 @@
 	}
 
 	.sec {
-		width: 1px;
+		width: 3px;
 		height: 100px;
 		left: 50%;
 		bottom: 50%;
