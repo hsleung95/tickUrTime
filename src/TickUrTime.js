@@ -132,7 +132,6 @@ class TickUrTime extends React.Component {
 	
 	async getActivities() {
 		var res = await this.setToken();
-		console.log(window.globalConfig);
 		var activities = await this.controller.getActivities();
 		this.setState({activities: (activities == null) ? [] : activities});
 		this.setCommonlyUsed();
@@ -171,7 +170,6 @@ class TickUrTime extends React.Component {
 				counting: true
 			});
 			if (!this.state.notified && this.state.estimatedTime != null && date.getTime() >= this.state.estimatedTime.getTime()) {
-				console.log(this.state.notified);
 				this.setState({notified: true});
 				this.notifyUser();
 			}
@@ -269,7 +267,6 @@ class TickUrTime extends React.Component {
 		this.setState({
 			estimatedTime: new Date(e.target.value)
 		});
-		console.log(this.state.estimatedTime);
 	}
 	
 	render() {
