@@ -5,7 +5,7 @@ class Controller {
 	url;
 	
 	constructor() {
-		this.url = "http://localhost:8080";
+		this.url = "http://tickurtimebackend-env.eba-v8pmauvm.us-west-1.elasticbeanstalk.com";
 	}
 	
 	async getActivityRecord() {
