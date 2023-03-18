@@ -14,7 +14,7 @@ class Controller {
 				return res.data;
 			}).catch(err => {
 				console.log(err);
-				return err;
+				return [];
 			});
 	}
 	
@@ -25,7 +25,7 @@ class Controller {
 			return data
 		}).catch(err => {
 				console.log(err);
-				return err;
+				return [];
 			});
 	}
 	
@@ -49,7 +49,7 @@ class Controller {
 				return res.data;
 			}).catch(err => {
 				console.log(err);
-				return err;
+				return [];
 			});
 	}
 	
@@ -76,15 +76,15 @@ class Controller {
 	}
 	
 	async getToken() {
-		return await axios.post("http://localhost:8080/token")
+		return await axios.post(this.url + "/token")
 		.then((data) => {
-			return data
+			return data.data.token;
 		});
 	}
 	
 	async putToken(oldToken, newToken) {
 		var params = {oldToken: oldToken, newToken: newToken};
-		axios.put("http://localhost:8080/token", params);
+		axios.put(this.url + "/token", params);
 	}
 }
 
