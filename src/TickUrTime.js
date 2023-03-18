@@ -83,25 +83,33 @@ class TickUrTime extends React.Component {
 
 	async setToken() {
 		const {user, isAuthenticated} = this.props.auth0;
-		var localToken = localStorage.getItem("token")
+		var localToken = localStorage.getItem("token");
 		var token = (isAuthenticated) ? user.sub : localToken;
 
 		if (token == null || token == "null") {
-			var requestToken = this.controller.getToken();
-			if (requestToken != null) {
-				localStorage.setItem("token", token);
-				window.globalConfig = {headers: {token: token}};
-			}
+			await this.getToken();
 		} else {
 			var tokenPrefix = token.substring(0,5);
 			var localTokenPrefix = localToken.substring(0,5);
-			if (localTokenPrefix == "guest" && tokenPrefix != localTokenPrefix) {
-				this.controller.putToken(localToken, token);
+			if (localTokenPrefix != "guest" && localTokenPrefix != "auth0") {
+				await this.getToken();
+			} else if (localTokenPrefix == "guest" && tokenPrefix != localTokenPrefix) {
+				await this.controller.putToken(localToken, token);
+				localStorage.setItem("token", token);
+				window.globalConfig = {headers: {token: token}};
+			} else {
+				window.globalConfig = {headers: {token: token}};
 			}
-			localStorage.setItem("token", token);
-			window.globalConfig = {headers: {token: token}};
 		}
 	}
+
+	async getToken() {
+		var requestToken = await this.controller.getToken();
+		if (requestToken != null) {
+			localStorage.setItem("token", requestToken);
+			window.globalConfig = {headers: {token: requestToken}};
+		}
+}
 	
 	componentDidMount() {
 		this.askNotificationPermission();
@@ -123,8 +131,10 @@ class TickUrTime extends React.Component {
 	}
 	
 	async getActivities() {
+		var res = await this.setToken();
+		console.log(window.globalConfig);
 		var activities = await this.controller.getActivities();
-		this.setState({activities: activities});
+		this.setState({activities: (activities == null) ? [] : activities});
 		this.setCommonlyUsed();
 
 	}
@@ -210,8 +220,9 @@ class TickUrTime extends React.Component {
 	}
 	
 	async getRecord() {
+		var res = await this.setToken();
 		var records = await this.controller.getActivityRecord();
-		this.setState({records: records});
+		this.setState({records: (records == null) ? [] : records});
 	}
 
 	async addRecord(activityName = null, startTime = null, endTime = null, timeSpent = null) {
