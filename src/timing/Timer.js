@@ -1,4 +1,5 @@
 import React from 'react';
+import Dropdown from 'react-bootstrap/Dropdown';
 
 function Timer(props) {
 	var count = props.count;
@@ -18,6 +19,7 @@ function Timer(props) {
 	}
 	return (
 		<div className="timer">
+
 			<div className="timeStr">
 				{hr} : {min} : {sec}
 			</div>

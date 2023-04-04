@@ -20,6 +20,8 @@ import LogoutButton from './auth/LogoutButton.js';
 import { withAuth0 } from "@auth0/auth0-react";
 import {formatDateVal} from './utils/DateUtils.js';
 import Controller from './Controller.js';
+import { Card } from "react-bootstrap";
+import { Dropdown } from 'react-bootstrap';
 
 class TickUrTime extends React.Component {
 
@@ -275,41 +277,50 @@ class TickUrTime extends React.Component {
 		return (
 			<div className="tickUrTime">
 				<Tabs defaultActiveKey="timing" justify>
-					<Tab eventKey = "timing" title="timing">
-						<br />
-						<div>
+					<Card eventKey = "timing" title="timing">
+						<Card.Body>
 							<Row className="rowActivity">
+							<Dropdown>
+								<Dropdown.Toggle variant="success">
+								Open Menu
+								</Dropdown.Toggle>
+								<Dropdown.Menu>
+								<Dropdown.Item href="#">
+									Home Page
+								</Dropdown.Item>
+								<Dropdown.Item href="#">
+									Settings
+								</Dropdown.Item>
+								<Dropdown.Item href="#">
+									Logout
+								</Dropdown.Item>
+								</Dropdown.Menu>
+							</Dropdown>
 								<Col xs="9">
 									{<div className="activities">{this.state.commonlyUsed.map((activity,index) => (
-										<Button className="btnActivity" key={index} disabled={this.state.activity==activity} onClick={() => {this.setActivity(activity);}}>
+										<Button className="btnActivity" style={{backgroundColor:"#738FA7", border:"none"}} key={index} disabled={this.state.activity==activity} onClick={() => {this.setActivity(activity);}}>
 											{activity.name}
 										</Button>
 									))}</div>}
 								</Col>
 								<Col xs="3">
-									{<Button className="btnMore" onClick={this.toggleActivityList}>
-										more
+									{<Button className="btnMore" variant="dark" onClick={this.toggleActivityList}>
+										More
 									</Button>}
 								</Col>
 							</Row>
-							<br />
 							{this.state.timer == 'clock' && <Clock count={this.state.count} />}
 							{this.state.timer == 'timer' && <Timer count={this.state.count} />}
-							<br />
 							<Row>
-								<Col xs="6" className="text-center">Selected Activity:</Col>
-								<Col xs="6" className="text-center">{(this.state.activity) ? this.state.activity.name : ""}</Col>
+								<Col xs="6" className="text-center" style={{color: "white"}}>Selected Activity:</Col>
+								<Col xs="6" className="text-center" style={{color: "white"}}>{(this.state.activity) ? this.state.activity.name : ""}</Col>
 							</Row>
-							<br />
 							<Row>
-								<Col xs="6" className="text-center">
-									Estimated Time:
-								</Col>
+								<Col xs="6" className="text-center" style={{color: "white"}}>Estimated Time:</Col>
 								<Col xs="6">
-									<FormControl id="estimatedTime" type="datetime-local" placeholder="date" onChange={this.updateEstimatedTime} />                                                     
+									<FormControl id="estimatedTime" type="datetime-local" placeholder="date" onChange={this.updateEstimatedTime} />                                               
 								</Col>
 							</Row>
-							<br />
 							<Actions setTimer={this.setTimer}
 								startCounting={this.startCounting}
 								pauseCounting={this.pauseCounting}
@@ -325,24 +336,27 @@ class TickUrTime extends React.Component {
 								activities={this.state.activities}
 								toggleActivityList={this.toggleActivityList}
 							/>
-						</div>
-					</Tab>
-					<Tab eventKey = "records" title="records">
-						<br />
-						<Records addRecord={this.addRecord} 
-								 updateRecord={this.updateRecord} 
-								 deleteRecord={this.deleteRecord} 
-								 records = {this.state.records} 
-								 getRecord={this.getRecord}
-								 controller={this.controller}
-						 />
-					</Tab>
-					<Tab eventKey = "userInfo" title="info">
-						<br />
+						</Card.Body>
+					</Card>
+					<Card eventKey = "records" title="records">
+						<Card.Body>
+							<Records 
+								addRecord={this.addRecord} 
+								updateRecord={this.updateRecord} 
+								deleteRecord={this.deleteRecord} 
+								records = {this.state.records} 
+								getRecord={this.getRecord}
+								controller={this.controller}
+							/>
+						 </Card.Body>
+					</Card>
+					<Card eventKey = "userInfo" title="info">
+						<Card.Body>
 							{isAuthenticated && <LogoutButton />}
 							{!isAuthenticated && <LoginButton />}
-
-					</Tab>
+						</Card.Body>
+					</Card>
+					
 				</Tabs>
 			</div>
 		);

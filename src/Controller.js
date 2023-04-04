@@ -84,7 +84,7 @@ class Controller {
 	
 	async putToken(oldToken, newToken) {
 		var params = {oldToken: oldToken, newToken: newToken};
-		axios.put(this.url + "/token", params);
+		axios.put(this.url +"/token", params);
 	}
 }
 
