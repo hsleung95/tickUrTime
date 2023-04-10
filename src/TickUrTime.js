@@ -280,28 +280,21 @@ class TickUrTime extends React.Component {
 					<Card eventKey = "timing" title="timing">
 						<Card.Body>
 							<Row className="rowActivity">
-							<Dropdown>
-								<Dropdown.Toggle variant="success">
-								Open Menu
-								</Dropdown.Toggle>
-								<Dropdown.Menu>
-								<Dropdown.Item href="#">
-									Home Page
-								</Dropdown.Item>
-								<Dropdown.Item href="#">
-									Settings
-								</Dropdown.Item>
-								<Dropdown.Item href="#">
-									Logout
-								</Dropdown.Item>
-								</Dropdown.Menu>
-							</Dropdown>
 								<Col xs="9">
-									{<div className="activities">{this.state.commonlyUsed.map((activity,index) => (
-										<Button className="btnActivity" style={{backgroundColor:"#738FA7", border:"none"}} key={index} disabled={this.state.activity==activity} onClick={() => {this.setActivity(activity);}}>
-											{activity.name}
-										</Button>
-									))}</div>}
+									<div className="activities">
+										<Dropdown>
+											<Dropdown.Toggle variant="success">
+												Open Menu
+											</Dropdown.Toggle>
+										<Dropdown.Menu>
+										{this.state.commonlyUsed.map((activity,index) => (
+											<Dropdown.Item className="btnActivity" style={{backgroundColor:"#738FA7", border:"none"}} key={index} disabled={this.state.activity==activity} onClick={() => {this.setActivity(activity);}}>
+												{activity.name}
+											</Dropdown.Item>
+										))}
+										</Dropdown.Menu>
+									</Dropdown>
+									</div>
 								</Col>
 								<Col xs="3">
 									{<Button className="btnMore" variant="dark" onClick={this.toggleActivityList}>
