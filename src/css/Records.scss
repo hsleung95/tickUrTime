@@ -1,26 +1,65 @@
-.row-btn {
-	text-align: center;
-	button {
-		margin-right: 5px;
-	}
-}
+.recordTab {
 
-.modal-dialog {
-	margin-top: 15vh;
-}
-
-.recordForm {
-	.class-right {
-		float: right;
-	}
-}
-
-#datepicker {
-	position: absolute;
-}
-
-@media (min-width: 500px) {
 	.row-btn {
-		text-align: left;
+		text-align: center;
+		button {
+			margin-right: 5px;
+		}
 	}
+	
+	.modal-dialog {
+		margin-top: 15vh;
+	}
+	
+	.recordForm {
+		.class-right {
+			float: right;
+		}
+	}
+	
+	.datepicker {
+		position: absolute;
+		color: black;
+	}
+
+	.record-fields {
+		color: white;
+	}
+
+	.dateDiv {
+		font-size: 24px;
+		width: 100%;
+		padding: 0;
+	}
+
+	.activityDateDiv {
+		font-size: 20px;
+	}
+
+	@media (min-width: 500px) {
+		.row-btn {
+			text-align: left;
+		}
+	}
+}
+
+.react-tags-wrapper {
+	.ReactTags__selected {
+		margin-top: 7px;
+		.tag-wrapper {
+			padding: 7px;
+			border: 1px solid rgba(0, 0, 0, .5);
+			border-radius: 5px;
+			margin-right: 5px;
+			font-size: 12px;
+		
+			.ReactTags__remove {
+				margin-left: 5px;
+			}
+		}
+	}
+}
+
+.modalBtn {
+	margin-right: 5px;
 }

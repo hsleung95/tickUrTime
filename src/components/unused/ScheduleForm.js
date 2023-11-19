@@ -6,8 +6,8 @@ import Col from 'react-bootstrap/Col';
 import Modal from 'react-bootstrap/Modal';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
-import Weekdays from './formContent/Weekdays';
-import Monthdays from './formContent/Monthdays';
+import Weekdays from '../formContent/Weekdays';
+import Monthdays from '../formContent/Monthdays';
 
 class ScheduleForm extends React.Component {
     currentDate;
@@ -46,7 +46,7 @@ class ScheduleForm extends React.Component {
     handleSubmit(e) {
         e.preventDefault();
         var duration = "".concat(e.target.durationHr.value, ":", e.target.durationMin.value);
-        console.log(duration);
+        // console.log(duration);
         console.log(e.target.startDate.value);
         this.setState({showForm: false});
     }

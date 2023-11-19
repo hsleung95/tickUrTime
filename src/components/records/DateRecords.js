@@ -2,12 +2,11 @@ import React from 'react';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
-import {formatDate,formatSeconds} from './../utils/DateUtils.js';
-import DatePicker from 'sassy-datepicker';
+import {formatDate,formatTime,formatSeconds} from '../../utils/DateUtils.js';
+import {ClickOutsideDatePicker} from '../ClickOutsideDatePicker.js';
 
 function DateRecords(props) {
 	var records = [];
-	var dates = [];
 
 	var selectedDate = formatDate(props.selectedDate);
 	const [rec, setRec] = React.useState(records[selectedDate]);
@@ -19,37 +18,29 @@ function DateRecords(props) {
 	);
 
 	if (props.records) {
-		props.records.forEach(record => {
-			var date = new Date(record.startTime);
-			date = formatDate(date);
-			if (!dates[date]) {
-				dates[date] = [];
-			}
+		for (var date in props.records) {
+			var dateRecords = props.records[date];
 			if (!records[date]) {
 				records[date] = [];
 			}
-			dates[date].push(record);
-		});
-	}
-	var i = 0;
-	for (var date in dates) {
-		var dateRecords = dates[date];
-		dateRecords.forEach(record => {
-			records[date].push(
-				<Row key={i} className="record" onClick={() => {props.setCurrentRecord(record);}}>
-					<Col xs="3" className="text-center">
-						{date}
-					</Col>
-					<Col xs="6" className="text-center">
-					{record.activity}
-					</Col>
-					<Col xs="3" className="text-center">
-					{formatSeconds(record.timeSpent)}
-					</Col>
-				</Row>
-			);
-			i++;
-		});
+			var i = 0;
+			dateRecords.forEach(record => {
+				records[date].push(
+					<Row key={i} className="record" onClick={() => {props.setCurrentRecord(record);}}>
+						<Col xs="3" className="text-center">
+							{formatTime(new Date(record.startTime))}-{formatTime(new Date(record.endTime))}
+						</Col>
+						<Col xs="6" className="text-center">
+						{record.activity.join(',')}
+						</Col>
+						<Col xs="3" className="text-center">
+						{formatSeconds(record.timeSpent)}
+						</Col>
+					</Row>
+				);
+				i++;
+			});
+		}
 	}
 	
 	const changeVal = (val) => {
@@ -73,20 +64,18 @@ function DateRecords(props) {
 	}, [props.records]);
 
 	return (
-		<>
+		<div className="dateRecords">
 			<Row className="text-center">
 				<Col xs="3">
 					<div className="btn-change-date" onClick={prevDay}>
 						<Button>&lt;</Button>
 					</div>
 				</Col>
-				<Col xs="6">
-					<div className="dateDiv">
-						<div onClick={() => {toggleShowDatePicker(true);}}>
-							{formatDate(props.selectedDate)}
-						</div>
-						{showDatePicker && <DatePicker id="datepicker" value={props.selectedDate} onChange={changeVal} />}
-					</div>
+				<Col xs="6" onClick={() => {!showDatePicker && toggleShowDatePicker(true);}}>
+					<Button className="dateDiv fw-bold">
+						{formatDate(props.selectedDate)}
+					</Button>
+					<ClickOutsideDatePicker show={showDatePicker} onClickOutside={() => {updateShowDatePicker(false)}} date={props.selectedDate} changeDate={changeVal} />
 				</Col>
 				<Col xs="3">
 					<div className="btn-change-date" onClick={nextDay}>
@@ -95,7 +84,7 @@ function DateRecords(props) {
 				</Col>
 			</Row>
 			<br />
-			<Row className="fw-bold">
+			<Row className="fw-bold record-fields">
 				<Col xs="3" className="text-center">
 					Date
 				</Col>
@@ -109,7 +98,7 @@ function DateRecords(props) {
 			<div className="records dateRecords">
 				{rec}
 			</div>
-		</>
+		</div>
 	);
 }
 

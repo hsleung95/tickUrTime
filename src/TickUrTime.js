@@ -1,31 +1,21 @@
 import React from 'react';
-import Button from 'react-bootstrap/Button';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tabs';
-import Clock from './timing/Clock.js';
-import Timer from './timing/Timer.js';
-import Records from './Records.js';
-import Actions from './Actions.js';
-import ActivityList from './ActivityList.js';
-import FormControl from 'react-bootstrap/FormControl';
-import Form from 'react-bootstrap/Form';
-import axios from "axios";
+import Records from './components/Records.js';
+import Timing from './components/Timing.js';
 import './css/TickUrTime.scss';
 import './css/timing/Clock.scss';
 import './css/timing/Timer.scss';
-import LoginButton from './auth/LoginButton.js';
-import LogoutButton from './auth/LogoutButton.js';
+import LoginButton from './components/auth/LoginButton.js';
+import LogoutButton from './components/auth/LogoutButton.js';
 import { withAuth0 } from "@auth0/auth0-react";
-import {formatDateVal} from './utils/DateUtils.js';
 import Controller from './Controller.js';
-import { Card } from "react-bootstrap";
-import { Dropdown } from 'react-bootstrap';
+import { Card } from 'react-bootstrap';
+
+const END_OF_MONTHS = [31,30,31,30,31,30,31,31,30,31,30,31];
 
 class TickUrTime extends React.Component {
 
-	timer;
 	commonLength;
 	controller;
 
@@ -34,43 +24,42 @@ class TickUrTime extends React.Component {
 		var activities = [];
 		var commonlyUsed = [];
 		this.commonLength = 3;
+		var currentStartDate = new Date();
+		currentStartDate.setDate(1);
+		var currentEndDate = new Date();
+		currentEndDate.setDate(END_OF_MONTHS[currentEndDate.getMonth()]);
 		
 		this.state = {
-			count: 0,
-			counted: 0,
-			counting: false,
 			activity: null,
-			date: new Date(),
-			records: [],
 			activities: activities,
 			commonlyUsed: commonlyUsed,
-			timer: 'timer',
-			showActivityList: false,
 			estimatedTime: null,
-			notified: false
+			notified: false,
+			records: [],
+			activityRecords: [],
+			recordsSummary: [],
+			startDate: currentStartDate,
+			endDate: currentEndDate,
+			selectedDate: new Date(),
+			modalActivity: ''
 		};
+
 		
 		this.controller = new Controller();
-		this.getRecord = this.getRecord.bind(this);
-
-		this.toggleActivityList = this.toggleActivityList.bind(this);
+		this.addRecord = this.addRecord.bind(this);
+		this.getRecords = this.getRecords.bind(this);
+		this.updateRecord = this.updateRecord.bind(this);
+		this.deleteRecord = this.deleteRecord.bind(this);
+		this.getActivityRecords = this.getActivityRecords.bind(this);
+		this.getRecordsSummary = this.getRecordsSummary.bind(this);
 		this.getActivities = this.getActivities.bind(this);
 		this.addActivity = this.addActivity.bind(this);
 		this.setActivity = this.setActivity.bind(this);
-
-		this.startCounting = this.startCounting.bind(this);
-		this.pauseCounting = this.pauseCounting.bind(this);
-		this.stopCounting = this.stopCounting.bind(this);
-		this.setTimer = this.setTimer.bind(this);
-		this.updateEstimatedTime = this.updateEstimatedTime.bind(this);
+		this.setToken = this.setToken.bind(this);
+		this.updateDate = this.updateDate.bind(this);
+		this.updateStartDate = this.updateStartDate.bind(this);
+		this.updateEndDate = this.updateEndDate.bind(this);
 		window.globalConfig = null;
-		
-	}
-	
-	toggleActivityList() {
-		this.setState({
-			showActivityList: !this.state.showActivityList
-		});
 	}
 	
 	setCommonlyUsed() {
@@ -116,7 +105,8 @@ class TickUrTime extends React.Component {
 	componentDidMount() {
 		this.askNotificationPermission();
 		this.setToken().then(res => {
-			this.getRecord();
+			this.getRecords(null, this.state.startDate, this.state.endDate);
+			this.getRecordsSummary(this.state.startDate, this.state.endDate);
 			this.getActivities();
 		});
 	}
@@ -129,15 +119,14 @@ class TickUrTime extends React.Component {
 			var res = [];
 			localStorage.setItem(type,JSON.stringify(res));
 			return res;
-		}		
+		}
 	}
 	
 	async getActivities() {
-		var res = await this.setToken();
+		await this.setToken();
 		var activities = await this.controller.getActivities();
 		this.setState({activities: (activities == null) ? [] : activities});
 		this.setCommonlyUsed();
-
 	}
 	
 	async addActivity(activityInput) {
@@ -146,7 +135,7 @@ class TickUrTime extends React.Component {
 			commonlyUsed: false,
 			userId: window.globalConfig.headers.token
 		};
-		var records = await this.controller.addActivity(activity);
+		await this.controller.addActivity(activity);
 		this.getActivities();
 	}
 	
@@ -156,207 +145,146 @@ class TickUrTime extends React.Component {
 		});
 	}
 	
-	startCounting() {
-		if (!this.state.counting) {
-			this.setState({
-				date: new Date()
-			});
-		}
-		
-		this.timer = setInterval(() => {
-			var date = new Date();
-			var newCount = Math.round((date - this.state.date) / 1000);
-			this.setState({
-				count: newCount,
-				counted: 0,
-				counting: true
-			});
-			if (!this.state.notified && this.state.estimatedTime != null && date.getTime() >= this.state.estimatedTime.getTime()) {
-				this.setState({notified: true});
-				this.notifyUser();
-			}
-		},1000);
-	}
 	
 	async askNotificationPermission() {
-		let granted = false;
-
-		if (Notification.permission === 'granted') {
-			granted = true;
-		} else if (Notification.permission !== 'denied') {
-			let permission = await Notification.requestPermission();
-			granted = permission === 'granted' ? true : false;
+		if (Notification.permission !== 'denied') {
+			await Notification.requestPermission();
 		}
 	}
 	
-	notifyUser() {
-		if (Notification.permission === 'granted') {
-			const noti = new Notification('TickUrTime', {
-				body: 'your counting reached your estimated time'
-			});
-			
-			setTimeout(() => {
-				noti.close();
-			}, 10000);
-		}
-	}
-	
-	pauseCounting() {
-		clearInterval(this.timer);
+	async getRecords(activity = null, startTime = null, endTime = null) {
+		await this.setToken();
+		var records = await this.controller.getRecords(activity,startTime, endTime);
 		this.setState({
-			counting: false
+			records: records
 		});
-	}
-	
-	stopCounting() {
-		clearInterval(this.timer);
-		this.addRecord();
-		this.setState({
-			count: 0,
-			counted: this.state.count,
-			counting: false,
-			date: null
-		});
-	}
-	
-	async getRecord() {
-		var res = await this.setToken();
-		var records = await this.controller.getActivityRecord();
-		this.setState({records: (records == null) ? [] : records});
 	}
 
-	async addRecord(activityName = null, startTime = null, endTime = null, timeSpent = null) {
-		activityName = (activityName == null) ? this.state.activity.name : activityName;
-		startTime = (startTime == null) ? this.state.date : startTime;
-		endTime = (endTime == null) ? new Date() : endTime;
-		var timeSpent = (timeSpent == null) ? this.state.count : timeSpent;
+	async getActivityRecords(activity = null, startTime = null, endTime = null) {
+		await this.setToken();
+		this.setState({activityRecords: []});
+		var records = await this.controller.getRecords(activity,startTime, endTime);
+		this.setState({
+			activityRecords: records,
+			modalActivity: activity
+		});
+	}
+
+	async getRecordsSummary(startTime = null, endTime = null) {
+		await this.setToken();
+		var records = await this.controller.getRecordsSummary(startTime, endTime);
+		this.setState({
+			recordsSummary: records
+		});
+	}
+
+	async addRecord(activity, description, startTime, endTime, timeSpent) {
 		var record = {
-			activity: activityName,
+			activity: activity,
+			startTime: (startTime == null) ? "" : startTime.toUTCString(),
+			endTime: (endTime == null) ? "" :  endTime.toUTCString(),
+			timeSpent: timeSpent,
+			userId: window.globalConfig.headers.token,
+			description: description
+		};
+		await this.controller.addActivityRecord(record);
+		this.getActivityRecords(this.state.modalActivity, this.state.startDate, this.state.endDate);
+		this.getRecords(null, this.state.startDate, this.state.endDate);
+		this.getRecordsSummary(this.state.startDate, this.state.endDate);
+}
+
+	async updateRecord(id, activity, description, startTime, endTime, timeSpent) {
+		var record = {
+			activity: activity,
 			startTime: startTime.toUTCString(),
 			endTime: endTime.toUTCString(),
 			timeSpent: timeSpent,
 			userId: window.globalConfig.headers.token,
-			description: ""
+			description: description
 		};
-		var records = await this.controller.addActivityRecord(record);
-		this.getRecord();
-	}
-
-	async updateRecord(id, activityName, startTime, endTime, timeSpent) {
-		var record = {
-			activity: activityName,
-			startTime: startTime.toUTCString(),
-			endTime: endTime.toUTCString(),
-			timeSpent: timeSpent,
-			userId: window.globalConfig.headers.token,
-			description: ""
-		};
-		var records = await this.controller.updateActivityRecord(id, record);
-		this.getRecord();
-	}
+		 await this.controller.updateActivityRecord(id, record);
+		 this.getActivityRecords(this.state.modalActivity, this.state.startDate, this.state.endDate);
+		 this.getRecords(null, this.state.startDate, this.state.endDate);
+		 this.getRecordsSummary(this.state.startDate, this.state.endDate);
+ }
 	
 	async deleteRecord(id) {
-		var records = await this.controller.deleteActivityRecord(id);
-		this.getRecord();
-	}
+		await this.controller.deleteActivityRecord(id);
+		this.getActivityRecords(this.state.modalActivity, this.state.startDate, this.state.endDate);
+		this.getRecords(null, this.state.startDate, this.state.endDate);
+		this.getRecordsSummary(this.state.startDate, this.state.endDate);
+  }
 
-
-	setTimer() {
-		this.setState({'timer': (this.state.timer == 'timer') ? 'clock' : 'timer'});
-	}
-	
-	updateEstimatedTime(e) {
+		
+	updateDate(val) {
+		if (val.getTime() < this.state.startDate.getTime()) {
+			this.getRecords(null, val, this.state.endDate);
+		} else if (val.getTime() > this.state.endDate.getTime()) {
+			this.getRecords(null, this.state.startDate, val);
+		}
 		this.setState({
-			estimatedTime: new Date(e.target.value)
+			selectedDate: val
 		});
 	}
 	
+	updateStartDate(val) {
+		if (val.getTime() < this.state.endDate.getTime()) {
+			this.getRecordsSummary(val, this.state.endDate);
+		}
+		this.setState({startDate: val});
+	}
+	
+	updateEndDate(val) {
+		if (val.getTime() > this.state.startDate.getTime()) {
+			this.getRecordsSummary(this.state.startDate, val);
+		}
+		this.setState({endDate: val});
+	}
+
 	render() {
 		const { isAuthenticated } = this.props.auth0;
 
 		return (
 			<div className="tickUrTime">
 				<Tabs defaultActiveKey="timing" justify>
-					<Card eventKey = "timing" title="timing">
+					<Tab eventKey = "timing" title="timing">
 						<Card.Body>
-							<Row className="rowActivity">
-							<Dropdown>
-								<Dropdown.Toggle variant="success">
-								Open Menu
-								</Dropdown.Toggle>
-								<Dropdown.Menu>
-								<Dropdown.Item href="#">
-									Home Page
-								</Dropdown.Item>
-								<Dropdown.Item href="#">
-									Settings
-								</Dropdown.Item>
-								<Dropdown.Item href="#">
-									Logout
-								</Dropdown.Item>
-								</Dropdown.Menu>
-							</Dropdown>
-								<Col xs="9">
-									{<div className="activities">{this.state.commonlyUsed.map((activity,index) => (
-										<Button className="btnActivity" style={{backgroundColor:"#738FA7", border:"none"}} key={index} disabled={this.state.activity==activity} onClick={() => {this.setActivity(activity);}}>
-											{activity.name}
-										</Button>
-									))}</div>}
-								</Col>
-								<Col xs="3">
-									{<Button className="btnMore" variant="dark" onClick={this.toggleActivityList}>
-										More
-									</Button>}
-								</Col>
-							</Row>
-							{this.state.timer == 'clock' && <Clock count={this.state.count} />}
-							{this.state.timer == 'timer' && <Timer count={this.state.count} />}
-							<Row>
-								<Col xs="6" className="text-center" style={{color: "white"}}>Selected Activity:</Col>
-								<Col xs="6" className="text-center" style={{color: "white"}}>{(this.state.activity) ? this.state.activity.name : ""}</Col>
-							</Row>
-							<Row>
-								<Col xs="6" className="text-center" style={{color: "white"}}>Estimated Time:</Col>
-								<Col xs="6">
-									<FormControl id="estimatedTime" type="datetime-local" placeholder="date" onChange={this.updateEstimatedTime} />                                               
-								</Col>
-							</Row>
-							<Actions setTimer={this.setTimer}
-								startCounting={this.startCounting}
-								pauseCounting={this.pauseCounting}
-								stopCounting={this.stopCounting}
-								timer={this.state.timer}
-								activity={this.state.activity}
-								counting={this.state.counting}
-								count={this.state.count}
-							/>
-							<ActivityList showActivityList={this.state.showActivityList}
-								setActivity={this.setActivity}
-								addActivity={this.addActivity}
+							<Timing 
+								addRecord={this.addRecord}
+								commonlyUsed={this.state.commonlyUsed}
 								activities={this.state.activities}
-								toggleActivityList={this.toggleActivityList}
 							/>
 						</Card.Body>
-					</Card>
-					<Card eventKey = "records" title="records">
+					</Tab>
+					<Tab eventKey = "records" title="records">
 						<Card.Body>
 							<Records 
+								records = {this.state.records}
+								activityRecords = {this.state.activityRecords}
+								recordsSummary = {this.state.recordsSummary}
+								selectedDate={this.state.selectedDate}
+								startDate={this.state.startDate}
+								endDate={this.state.endDate}
+								modalActivity={this.state.modalActivity}
+
 								addRecord={this.addRecord} 
-								updateRecord={this.updateRecord} 
-								deleteRecord={this.deleteRecord} 
-								records = {this.state.records} 
-								getRecord={this.getRecord}
-								controller={this.controller}
+								updateRecord={this.updateRecord}
+								deleteRecord={this.deleteRecord}
+								getRecords={this.getRecords}
+								getActivityRecords={this.getActivityRecords}
+								getRecordsSummary={this.getRecordsSummary}
+								updateDate={this.updateDate}
+								updateStartDate={this.updateStartDate}
+								updateEndDate={this.updateEndDate}
 							/>
 						 </Card.Body>
-					</Card>
-					<Card eventKey = "userInfo" title="info">
+					</Tab>
+					<Tab eventKey = "userInfo" title="info">
 						<Card.Body>
-							{isAuthenticated && <LogoutButton />}
-							{!isAuthenticated && <LoginButton />}
+							{isAuthenticated == true && <LogoutButton />}
+							{isAuthenticated != true && <LoginButton />}
 						</Card.Body>
-					</Card>
-					
+					</Tab>
 				</Tabs>
 			</div>
 		);

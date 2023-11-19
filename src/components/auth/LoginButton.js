@@ -4,7 +4,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import './../css/Login.scss'
+import './../../css/Login.scss'
 import { Card } from "react-bootstrap";
 
 

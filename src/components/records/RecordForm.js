@@ -2,35 +2,32 @@ import React from 'react';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
 import Modal from 'react-bootstrap/Modal';
-import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
-import {formatDate, formatTime, formatSeconds, formatDateVal} from './utils/DateUtils.js';
-import Controller from './Controller.js';
+import {formatSeconds, formatDateVal} from './../../utils/DateUtils.js';
+import {Tagging} from '../Tagging.js';
 
 class RecordForm extends React.Component {
-	
-	controller;
 	
     constructor(props) {
         super(props);
 		this.state = {
 			startTime: null,
 			endTime: null,
-			timeSpent: null
+			timeSpent: null,
+			activity: []
 		};
-		this.controller = new Controller();
-        this.handleSubmit = this.handleSubmit.bind(this);
-		this.getRecord = props.getRecord.bind(this);
+		this.getRecords = props.getRecords.bind(this);
 		this.addRecord = props.addRecord.bind(this);
 		this.updateRecord = props.updateRecord.bind(this);
 		this.deleteRecord = props.deleteRecord.bind(this);
 		this.toggleForm = props.toggleForm.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
 		this.setStartTime = this.setStartTime.bind(this);
 		this.setEndTime = this.setEndTime.bind(this);
 		this.confirmDelete = this.confirmDelete.bind(this);
 		this.setRecordForm = this.setRecordForm.bind(this);
+		this.setActivity = this.setActivity.bind(this);
     }
 
     handleSubmit(e) {
@@ -43,19 +40,18 @@ class RecordForm extends React.Component {
 			return;
 		}
 		if (this.props.record == null) {
-			this.addRecord(e.target.activity.value, startDate, endDate, timeSpent);
+			this.addRecord(this.state.activity, e.target.description.value, startDate, endDate, timeSpent);
 		} else {
-			this.updateRecord(this.props.record._id, e.target.activity.value, startDate, endDate, timeSpent);
+			this.updateRecord(this.props.record.id, this.state.activity, e.target.description.value, startDate, endDate, timeSpent);
 		}
         this.toggleForm(false);
     }
 	
 	setStartTime(e) {
 		var startTime =  new Date(e.target.value);
-		var timeSpent = -1;
 		var timeSpent = (this.state.endTime - startTime) / 1000;
-		console.log("start time: " + startTime + ", end time: " + this.state.endTime); 
-		console.log(timeSpent);
+		// console.log("start time: " + startTime + ", end time: " + this.state.endTime); 
+		// console.log(timeSpent);
 		if (timeSpent > 0) {
 			this.setState({
 				startTime: startTime,
@@ -70,10 +66,9 @@ class RecordForm extends React.Component {
 	
 	setEndTime(e) {
 		var endTime =  new Date(e.target.value);
-		var timeSpent = -1;
 		var timeSpent = (endTime - this.state.startTime) / 1000;
-		console.log("start time: " + this.state.startTime + ", end time: " + endTime); 
-		console.log(timeSpent);
+		// console.log("start time: " + this.state.startTime + ", end time: " + endTime); 
+		// console.log(timeSpent);
 		if (timeSpent > 0) {
 			this.setState({
 				endTime: endTime,
@@ -90,33 +85,53 @@ class RecordForm extends React.Component {
 		this.setState({
 			startTime: (this.props.record) ? new Date(this.props.record.startTime) : new Date(),
 			endTime: (this.props.record) ? new Date(this.props.record.endTime) : new Date(),
+			activity: (this.props.record) ? this.props.record.activity : []
 		});
 	}
 	
 	confirmDelete(e) {
 		if (window.confirm("Delete record?") == true) {
-			this.deleteRecord(this.props.record._id);
+			this.deleteRecord(this.props.record.id);
 			this.toggleForm(false);
 		}
 	}
 
+	setActivity(activity) {
+		this.setState({
+			activity: activity
+		});
+	}
+
     render() {
+		var activity = (this.props.record) ? this.props.record.activity : [];
+		var description = (this.props.record) ? this.props.record.description: '';
 		var startDate = (this.props.record) ? formatDateVal(new Date(this.props.record.startTime)) : formatDateVal(new Date());
 		var endDate = (this.props.record) ?  formatDateVal(new Date(this.props.record.endTime)) : formatDateVal(new Date());
-		var activity = (this.props.record) ? this.props.record.activity : '';
 		var timeSpent = (this.props.record) ? formatSeconds(this.props.record.timeSpent) : 0;
         return (
         <>
             <Modal show={this.props.showForm} onHide={() => this.toggleForm(false)} onShow={this.setRecordForm}>
                 <Modal.Header>
-                    New Record
+                    {(this.props.record == null) ? 'New Record' : 'Update Record'}
                 </Modal.Header>
                 <Modal.Body>
                 <Form id="eventForm" className="recordForm" onSubmit={this.handleSubmit} noValidate>
+					<Row>
+					</Row>
                     <Row>
                         <Form.Group className="mb-3" controlId="activity">
                             <Form.Label>Activity</Form.Label>
-                            <Form.Control type="text" defaultValue={activity}/>
+							<Tagging
+								tags={activity}
+								setTags={this.setActivity}
+								name={"activity"}
+							/>
+                        </Form.Group>
+                    </Row>
+					<Row>
+                        <Form.Group className="mb-3" controlId="description">
+                            <Form.Label>Description</Form.Label>
+                            <Form.Control type="text" defaultValue={description} />
                             <Form.Text className="text-muted">
                             </Form.Text>
                         </Form.Group>

@@ -30,11 +30,11 @@ class Record extends React.Component {
 		}
 	}
 	
-	formatTime(date) {
+	formatTime(date, withoutSeconds = false) {
 		var hr = this.padZero(date.getHours());
 		var min = this.padZero(date.getMinutes());
 		var second = this.padZero(date.getSeconds());
-		return hr + ':' + min + ':' + second;
+		return (withoutSeconds) ? hr + ':' + min :  hr + ':' + min + ':' + second;
 	}
 	
 	formatDate(date) {

@@ -4,7 +4,6 @@ import './css/App.css';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import TickUrTime from './TickUrTime.js';
-import ScheduleForm from './ScheduleForm.js';
 import { useAuth0 } from "@auth0/auth0-react";
 
 function App() {
