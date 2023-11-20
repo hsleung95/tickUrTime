@@ -34,7 +34,7 @@ function ActivityRecords(props) {
 		for (var key in props.records) {
 			records.push(
 					<Row key={key} data-key={key} className="record" onClick={(e) => {;props.setActivityRecords(e.currentTarget.dataset.key, props.startDate, props.endDate)}}>
-						<Col xs="4" className="text-center">
+						<Col xs="3" md="4" className="text-center">
 							{key}
 						</Col>
 						<Col xs="2" className="text-center">
@@ -77,7 +77,7 @@ function ActivityRecords(props) {
 			</Row>
 			<br />
 			<Row className="fw-bold record-fields">
-				<Col xs="4" className="text-center">
+				<Col xs="3" md="4" className="text-center">
 					Activity
 				</Col>
 				<Col xs="2" className="text-center">

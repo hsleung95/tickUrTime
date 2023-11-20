@@ -7,7 +7,7 @@ class Controller {
 	queues = ["addActivityRecord","updateActivityRecord","deleteActivityRecord","addActivity","updateActivity","deleteActivity"];
 	
 	constructor() {
-		this.url = "http://tickurtimebackend-env-2.eba-v8pmauvm.us-west-1.elasticbeanstalk.com";
+		this.url = (process.env && process.env.CONNECTION_URL) ? process.env.CONNECTION_URL : "http://localhost:8080";
 	}
 
 	formatStartTime(startTime) {
