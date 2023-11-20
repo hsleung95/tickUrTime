@@ -1,6 +1,6 @@
 .tickUrTime {
 	position: relative;
-	height: 100vh;
+	height: 95vh;
 
 	color: white;
 
@@ -43,3 +43,8 @@
 	width: 100%;
 }
 
+@media (min-width: 500px) {
+	.tickUrTime {
+		height:100vh;
+	}
+}
