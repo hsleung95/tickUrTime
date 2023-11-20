@@ -7,7 +7,7 @@ class Controller {
 	queues = ["addActivityRecord","updateActivityRecord","deleteActivityRecord","addActivity","updateActivity","deleteActivity"];
 	
 	constructor() {
-		this.url = (process.env && process.env.CONNECTION_URL) ? process.env.CONNECTION_URL : "http://localhost:8080";
+		this.url = (process.env && process.env.REACT_APP_CONNECTION_URL) ? process.env.REACT_APP_CONNECTION_URL : "http://localhost:8080";
 	}
 
 	formatStartTime(startTime) {
