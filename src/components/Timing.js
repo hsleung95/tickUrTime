@@ -149,18 +149,18 @@ class Timing extends React.Component {
                         />
                     </Col>
                 </Row>
-                <Row>
+                <Row className='padding-bottom-10'>
                     <Col xs="6" className="text-center ">Description:</Col>
                     <Col xs="6" className="text-center ">
                         <FormControl id="description" type="text" value={(this.state.description) ? this.state.description : ""} onChange={this.updateDescription}/>
                     </Col>
                 </Row>
-                <Row>
+                {false && <Row>
                     <Col xs="6" className="text-center" style={{color: "white"}}>Estimated Time:</Col>
                     <Col xs="6">
                         <FormControl id="estimatedTime" type="datetime-local" placeholder="date" onChange={this.updateEstimatedTime} />
                     </Col>
-                </Row>
+                </Row>}
                 <Actions setTimer={this.setTimer}
                     startCounting={this.startCounting}
                     pauseCounting={this.pauseCounting}
