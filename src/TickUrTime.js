@@ -124,9 +124,9 @@ class TickUrTime extends React.Component {
 	
 	async getActivities() {
 		await this.setToken();
-		var activities = await this.controller.getActivities();
-		this.setState({activities: (activities == null) ? [] : activities});
-		this.setCommonlyUsed();
+		// var activities = await this.controller.getActivities();
+		// this.setState({activities: (activities == null) ? [] : activities});
+		// this.setCommonlyUsed();
 	}
 	
 	async addActivity(activityInput) {
