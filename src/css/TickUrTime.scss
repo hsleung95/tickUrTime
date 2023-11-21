@@ -1,7 +1,7 @@
 .tickUrTime {
 	position: relative;
 	height: 90vh;
-
+	overflow-y:hidden;
 	color: white;
 
 	.nav-tabs {
@@ -40,12 +40,16 @@
 	}
 }
 
+.padding-bottom-10 {
+	padding-bottom: 10px;
+}
+
 #activityInput {
 	width: 100%;
 }
 
 @media (min-width: 500px) {
 	.tickUrTime {
-		height:100vh;
+		height: 99.5vh;
 	}
 }
